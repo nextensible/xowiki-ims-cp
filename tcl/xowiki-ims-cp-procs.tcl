@@ -15,12 +15,6 @@
 namespace eval ::xowiki::ims {}
 namespace eval ::xowiki::ims::cp {
 
-    proc mischa_shell {} {
-            set p [::ims::cp::controller create_pkg_from_pif -zipfile "[acs_root_dir]/packages/ims-cp/www/test/Simple_Manifest.zip"]
-            $p mixin ::xowiki::ims::cp::ContentPackage 
-            $p init 
-    }
-
     ::xo::PackageMgr create ::xowiki::ims::cp::Package \
         -package_key "xowiki-ims-cp" \
         -pretty_name "IMS CP Service for XoWiki" \
@@ -28,13 +22,13 @@ namespace eval ::xowiki::ims::cp {
         -superclass ::xowiki::Package
 
     # Todo Dont do a subclass - do a Service Contarct for import
-    Class ContentPackage -superclass ::ims::cp::Package
+    Class ContentPackage -superclass ::ims::cp::ContentPackage
 
     ContentPackage instproc initialize {} {
         Package initialize
         my set xo_pkg_obj $package_id
-        ds_comment "CP: [[self] serialize]"
-        ds_comment "P: [$package_id serialize]"
+        #ds_comment "CP: [[self] serialize]"
+        #ds_comment "P: [$package_id serialize]"
     }
 
     # DEPRECATED - We now mount into the current instance
@@ -50,10 +44,8 @@ namespace eval ::xowiki::ims::cp {
         #my package_id [::xowiki::Package require [my set site_node_id]]
     }
 
+    # todo move this elsewhere
     ContentPackage instproc empty_target_wiki {} {
-
-
-
         db_foreach instance_select \
             [::xowiki::Page instance_select_query \
                  -folder_id [[my set xo_pkg_obj] set folder_id] \
@@ -61,13 +53,11 @@ namespace eval ::xowiki::ims::cp {
             ] {
                     [my set xo_pkg_obj] delete -name $name
             }
-
     }
 
     ContentPackage instproc import_to_wiki_instance {} {
-        foreach r [[self]::manifest::resources info children] {
-            ds_comment asd
-            $r mixin Resource
+        foreach r [[my set manifest]::resources children] {
+            $r mixin add Resource
             $r import_to_xowiki
         }
     }
@@ -159,30 +149,53 @@ namespace eval ::xowiki::ims::cp {
         close $fid
         return $fn
     }
-   
 
 
 
 
 
+
+    #
+    # MARKER - FIX HERE
+    #
 
     Class Resource
 
+    # TODO Do we need dependencies here??
     Resource instproc import_to_xowiki {} {
-        foreach f [[self]::files info children] {
-            $f mixin File
-            $f to_xowiki
+        foreach imsfile [[self]::files children] {
+            set cp [$imsfile find_content_package]
+            ds_comment "CP IS: $cp"
+            set xo_pkg_obj ::[$cp set xo_pkg_obj]
+            ds_comment "XOCPOBJ IS: $xo_pkg_obj"
+            ds_comment "XOPKGOBJ: [$xo_pkg_obj serialize]"
+
+
+            ds_comment "FILE TAG [$imsfile serialize]"
+            set realfile [$imsfile set fileobj]
+            $realfile set package_id [$xo_pkg_obj set id]
+            $realfile set folder_id  [$xo_pkg_obj set folder_id]
+            $realfile mixin add ::xowiki::ims::cp::File
+            ds_comment "REAL [$realfile serialize]"
+            $realfile to_xowiki
         }
     }
 
 
 
 
+    ###########################
+    #
+    # FILE
+    #
+    # ::xowiki::ims::cp::File
+    #
+    ###########################
 
 
     Class File
 
-    ::xowiki::File instmixin add ::xowiki::ims::cp::File
+    #::xowiki::File instmixin add ::xowiki::ims::cp::File
 
     File instproc get_cp_filename {} {
         set filename [my name]
@@ -199,8 +212,10 @@ namespace eval ::xowiki::ims::cp {
     File instproc to_xowiki {} {
         #FIXME
 
-        set package_id [::ims::cp::controller::pkg set xo_pkg_obj]
-        set folder_id [[::ims::cp::controller::pkg set xo_pkg_obj] folder_id]
+        set package_id [my set package_id]
+        set folder_id [my set folder_id]
+        #set package_id [::ims::cp::controller::pkg set xo_pkg_obj]
+        #set folder_id [[::ims::cp::controller::pkg set xo_pkg_obj] folder_id]
             switch -- [my mime_type] {
                 "text/html" {
                     ds_comment "HTML: [my serialize]"
