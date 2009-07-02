@@ -44,7 +44,7 @@ namespace eval ::xowiki::ims::cp {
 
             if {[file isfile "[acs_root_dir]/content-repository-content-files[$cri set text]"]} {
                 set f [::xoutil::File create [my autoname exportfile] -location "[acs_root_dir]/content-repository-content-files[$cri set text]"]
-                $f set name [$cri set name]
+                $f set name [regsub "^file:" [$cri set name] ""]
                 lappend files $f
             } else {
                 ns_log notice "others detected"
@@ -240,8 +240,9 @@ namespace eval ::xowiki::ims::cp {
                    #ds_comment "FILE: [my serialize]"
                    set f [::xowiki::File new -destroy_on_cleanup \
                         -title [my set name] \
-                        -name [my set name] \
+                        -name "file:[my set name]" \
                         -parent_id $folder_id \
+                        -mime_type [my set mime_type] \
                         -package_id $package_id]
                    $f set import_file [my set location]
                    $f save_new
