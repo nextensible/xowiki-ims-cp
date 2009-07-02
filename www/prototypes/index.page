@@ -1,0 +1,13 @@
+::xowiki::Page new -title "Welcome to the XoWiki IMS CP Service" -text {
+    <p>Upload your File / Zipped Folder / IMS CP Package</p>
+    >>left-col<<
+    {{adp upload}}
+    >><<
+    >>right-col<<
+    {{recent -max_entries 100}}
+    >><<
+}
+
+
+
+
