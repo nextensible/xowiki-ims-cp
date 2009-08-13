@@ -190,6 +190,126 @@ namespace eval ::xowiki::ims::cp {
     }
 
 
+    #
+    # This is a copy of XoWikis "resolve page" method. We just added the emphasized part
+    #
+  Package instproc resolve_page {{-use_search_path true} {-simple false} -lang object method_var} {
+    my log "resolve_page '$object'"
+    upvar $method_var method
+    my instvar id
+
+    # get the default language if not specified
+    if {![info exists lang]} {
+      set lang [my default_language]
+    }
+
+    #
+    # First, resolve package level methods, 
+    # having the syntax PACKAGE_URL?METHOD&....
+    #
+
+    if {$object eq ""} {
+      #
+      # We allow only to call methods defined by the policy
+      #
+      set exported [[my set policy] defined_methods Package]
+      foreach m $exported {
+	#my log "--QP my exists_query_parameter $m = [my exists_query_parameter $m] || [my exists_form_parameter $m]"
+        if {[my exists_query_parameter $m] || [my exists_form_parameter $m]} {
+          set method $m  ;# determining the method, similar file extensions
+          return [self]
+        }
+      }
+    }
+
+    if {[string match "//*" $object]} {
+        # we have a reference to another instance, we cant resolve this from this package.
+      # Report back not found
+      return ""
+    }
+
+    #my log "--o object is '$object'"
+    if {$object eq ""} {
+      # we have no object, but as well no method callable on the package
+      set object [$id get_parameter index_page "index"]
+      #my log "--o object is now '$object'"
+    }
+    #
+    # second, resolve object level
+    #
+    set page [my resolve_request -default_lang $lang -simple $simple -path $object method]
+
+    ###############################################################
+    ###############################################################
+    ###############################################################
+    # Check if we have a file with same name
+    # TODO what means simple
+    set filepage [my resolve_request -default_lang "download/file" -simple $simple -path $object method]
+    if {$page eq "" && $filepage ne ""} {
+        return $filepage
+    }
+    ###############################################################
+    ###############################################################
+    ###############################################################
+    
+    #my log "--o resolving object '$object' -default_lang $lang -simple $simple returns '$page'"
+    if {$simple || $page ne ""} {
+      return $page
+    }
+
+
+
+    # stripped object is the object without a language prefix
+    set stripped_object $object
+    regexp {^..:(.*)$} $object _ stripped_object
+
+    # try standard page
+    set standard_page [$id get_parameter ${object}_page]
+    if {$standard_page ne ""} {
+      set page [my resolve_request -default_lang [::xo::cc lang] -path $standard_page method]
+      #my msg "--o resolving standard_page '$standard_page' returns $page"
+      if {$page ne ""} {
+        return $page
+      }
+
+      # Maybe we are calling from a different language, but the
+      # standard page with en: was already instantiated.
+      set standard_page "en:$stripped_object"
+      set page [my resolve_request -default_lang en -path $standard_page method]
+      #my msg "resolve -default_lang en -path $standard_page returns --> $page"
+      if {$page ne ""} {
+        return $page
+      }
+    }
+
+    # Maybe, a prototype page was imported with language en:, but the current language is different
+    if {$lang ne "en"} {
+      set page [my resolve_request -default_lang en -path $stripped_object method]
+      #my msg "resolve -default_lang en -path $stripped_object returns --> $page"
+      if {$page ne ""} {
+	return $page
+      }
+    }
+
+    if {$use_search_path} {
+      # Check for this page along the package path
+      foreach package [my package_path] {
+        set page [$package resolve_page -simple $simple -lang $lang $object method]
+        if {$page ne ""} {
+        return $page
+        }
+      }
+    }
+
+    #my msg "we have to try to import a prototype page for $stripped_object"
+    set page [my import-prototype-page $stripped_object]
+    if {$page ne ""} {
+      return $page
+    }
+    my log "no prototype for '$object' found"
+    return $page
+  }
+
     ##############################
     #
     # TOC
