@@ -3,7 +3,6 @@
   {replace 0}
 }
 
-#my log "\n\n\n\n\n\n\n\n\n\n\n\n ----------- \n\n\n\n\n\n\n\n [$package_id serialize]"
 
 set msg ""
 ad_form \
@@ -46,11 +45,15 @@ ad_form \
 
         #ds_comment "[$pkg serialize]"
         $pkg empty_target_wiki
-        
 
     } -after_submit {
         #FIXME here we have to empty the cache or return to the front page or something
         $pkg import_to_wiki_instance -include_dead_files true
+        foreach o [[$pkg set manifest]::organizations children] {
+            ns_log notice "ORGA XHTML: [$o asXHTML]"
+        }
+        #ns_log notice "[[$pkg set manifest] serialize]"
+
 
         #set title "Import XoWiki Pages"
         ad_returnredirect admin/list

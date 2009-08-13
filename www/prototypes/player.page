@@ -1,0 +1,19 @@
+::xowiki::Object new -title "IMS CP Player" -text {
+
+    my initialize -parameter {
+        {-resource_href ""}
+    }
+    ::xo::cc set_parameter object_type ::xowiki::PlainPage
+
+    ::xo::cc set_parameter template_file "/packages/xowiki-ims-cp/www/ims-cp-player-view"
+
+
+    Class CGI
+    CGI instproc content {} {
+        my get_parameters
+        return "<IFRAME name='ims-cp-player' src='$resource_href' width=100% height=600 scrolling=auto> Your user agent does not support frames or is currently configured not to display frames. However, you may visit the related document. </IFRAME>"
+}
+my mixin add CGI
+
+
+}

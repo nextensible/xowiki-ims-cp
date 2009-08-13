@@ -1,0 +1,20 @@
+::xowiki::Object new -title "Initialize Wiki as SCO" -text {
+    ::xo::cc set_parameter template_file "/packages/xowiki-ims-cp/www/view-raw"
+    my proc content {} {
+        set html "
+            <html>
+                <head>
+                    <script src='get_api.js'></script>
+                    <script>
+                        myapi = getAPI();
+                        myapi.LMSInitialize('');
+                    </script>
+                </head>
+                <body>
+                    Enter the wiki
+                </body>
+            </html>
+        "
+        return $html
+    }
+}

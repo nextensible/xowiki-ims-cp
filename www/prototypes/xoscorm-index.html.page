@@ -1,0 +1,19 @@
+::xowiki::Object new -title "Wiki Startpage " -text {
+    ::xo::cc set_parameter template_file "/packages/xowiki-ims-cp/www/view-raw"
+    my proc content {} {
+        set html "
+            <html>
+                <head>
+                    <script src='get_api.js'></script>
+                    <script>
+                        myapi = getAPI();
+                    </script>
+                </head>
+                <body onload="myapi.LMSInitialize('')" onunload="myapi.LMSFinish('')">
+                    <iframe width='100%' height='600px' src='index.html'></iframe>
+                </body>
+            </html>
+        "
+        return $html
+    }
+}
