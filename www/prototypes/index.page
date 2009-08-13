@@ -1,0 +1,99 @@
+::xowiki::Object new -title "Configuration" -text {
+
+    my initialize -parameter {
+        {-trigger_configuration false}
+    }
+
+    proc import_parameter_pages {} {
+
+        set package_instance "::[my package_id]"
+
+        set form_text {{@_title@ 
+            @PackagePath@ 
+            @use_hstore@ 
+            @top_includelet@ 
+            @_description@ 
+            @_publish_status@ 
+            @autoname@ 
+            @with_general_comments@
+            @with_user_tracking@ 
+            @template_file@ 
+            @show_per_object_categories@
+            @index_page@
+            @with_footer@} text/html}
+
+        set form_constraints {use_hstore:boolean
+            with_general_comments:boolean
+            with_footer:boolean
+            with_user_tracking:boolean
+            show_per_object_categories:boolean
+            template_file:text
+            index_page:text
+            autoname:boolean
+            PackagePath:text
+            top_includelet:text
+            {_publish_status:radio,options={live ready} {draft production},label=#xowiki.publish_status#,default=production}
+            _page_order:hidden
+            @categories:off
+            @table_properties:publish_status=all}
+
+
+        set form [::xowiki::Form new -destroy_on_cleanup \
+            -set description {} \
+            -set text $form_text \
+            -set package_id [$package_instance id] \
+            -set name en:parameter-form \
+            -set mime_type text/html \
+            -set title {Parameter Form} \
+            -set form_constraints $form_constraints \
+            -set parent_id [$package_instance folder_id]]
+
+        $form save_new
+
+
+
+
+        set formpage [::xowiki::FormPage new -destroy_on_cleanup \
+        -set instance_attributes {
+            index_page en:index.html
+            with_user_tracking t
+            PackagePath {}
+            use_hstore t
+            with_footer t
+            with_general_comments t
+            show_per_object_categories t
+            autoname f
+            template_file view-book
+            top_includelet {}
+         } \
+        -set description {} \
+        -text {} \
+        -package_id [$package_instance id] \
+        -name en:xowiki-scorm-std-parameters \
+        -mime_type text/plain \
+        -title {XoWiki SCORM Standard Parameter Values} \
+        -parent_id [$package_instance folder_id] \
+        -page_template [$form item_id] ]
+
+        $formpage save_new
+
+        ::parameter::set_value -parameter parameter_page -value "en:xowiki-scorm-std-parameters"
+
+        callback::subsite::parameter_changed::impl::xotcl-param-procs -package_id [$package_instance id] -parameter parameter_page -value "en:xowiki-scorm-std-parameters"
+
+        ad_returnredirect "index.html"
+    }
+
+    proc content {} {
+        my get_parameters
+        if {$trigger_configuration eq true} {
+               my import_parameter_pages
+        }
+        return "
+        <form>
+        <input type=hidden value=true name=trigger_configuration>
+        <button style='padding:1em; margin:5em'>Configure this instance as XoWiki IMS CP</button>
+        </form>
+        "
+    }
+}
