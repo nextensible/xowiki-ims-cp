@@ -26,37 +26,17 @@ ad_form \
       if {$upload_file eq ""} {
           template::form::set_error upload_form upload_file [_ acs-templating.HTMLArea_SpecifyUploadFilename] break 
       }
-
-      foreach o [::xowiki::Page allinstances] {
-        set preexists($o) 1
-      }
-
-      # FIXME  we assume we have a CP
-
+      # foreach o [::xowiki::Page allinstances] {
+      #   set preexists($o) 1
+      # }
         ::ims::cp::PackageInterchangeFile create pif -location [template::util::file::get_property tmp_filename $upload_file]
 
         set pkg [pif unpack]
-
-        #my log "[$pkg serialize]"
-
         $pkg mixin add ::xowiki::ims::cp::ContentPackage
-
         $pkg set xo_pkg_obj $package_id
-
-        #ds_comment "[$pkg serialize]"
         $pkg empty_target_wiki
-
     } -after_submit {
-        #FIXME here we have to empty the cache or return to the front page or something
-        $pkg import_to_wiki_instance -include_dead_files true
-        foreach o [[$pkg set manifest]::organizations children] {
-           # ns_log notice "ORGA XHTML: [$o asXHTML]"
-        }
-        #ns_log notice "[[$pkg set manifest] serialize]"
-
-
-        #set title "Import XoWiki Pages"
-        ad_returnredirect admin/list
-
+        $pkg import_to_wiki_instance
+        ad_returnredirect "list"
     }
 set context .

@@ -138,33 +138,52 @@ namespace eval ::xowiki::ims::cp {
                 #$f set name [regsub "^file:" [$cri set name] ""]
                 #lappend files $f
             } else {
-                ::xo::ConnectionContext require -url [ad_conn url]
-                ::xo::cc set_parameter template_file "/packages/xowiki-ims-cp/www/view-sco"
-                set f [File create [my autoname exporttmpfile] -temp true ]
+                #TODO do we still/really need that?
                 $cri set absolute_links 0
+                set f [File create [my autoname exporttmpfile] -temp true ]
                 $f set critem $cri
-                $f set content [$cri render -with_footer false]
                 $f set mime_type [$cri set mime_type]
                 $f set name [regsub "^en:" [$cri set name] ""]
-                #$f set_extension_based_on_mimetype
-                #my log "[$f serialize]"
+
+                $f set content [my get_page_content $cri]
+
                 $f save
                 lappend files $f
             }
         }
-
         return $files
-
     }
 
-    # TODO : This could be done more beatuiful i think!!!
-    Package instproc pretty_link args {
+    Class LinkRewriter
+    LinkRewriter instproc pretty_link args {
         # we need a relative URL
         set package_prefix "[my set package_url]"
         set absolute_internal_url [next]
         set relative_url [regsub $package_prefix $absolute_internal_url ""]
         return $relative_url
     }
+
+    Package ad_instproc get_page_content {cr_item} {
+      This method gets the contents of the page, but in contrast to normal xowiki "rendering"
+      it changes the link-generation process so that it generates relative urls.
+      Furthermore, it tries to detect, whether the page was originally imported, which means it
+      contains a "full html page", or whether it is an ordinary xowiki page, which only contains
+      an html fragment. In the latter case, the page content is wrapped.
+      } {
+        my mixin add ::xowiki::ims::cp::LinkRewriter
+        set content ""
+        # Fill the file with content using "render"
+        set content [$cr_item render -with_footer false]
+
+            # Using "view" method could be an option?
+            #::xo::ConnectionContext require -url [ad_conn url]
+            #::xo::cc set_parameter template_file "/packages/xowiki-ims-cp/www/view-sco"
+            #$f set content [$cri view]
+        my mixin delete ::xowiki::ims::cp::LinkRewriter
+        return $content
+    }
+
+
 
     Package ad_instproc export_wiki_as_cp {} {
         This is the trigger function for exporting a wiki instance as content package.
@@ -406,85 +425,94 @@ namespace eval ::xowiki::ims::cp {
         }
     }
 
+
+    Class Organization
+
+    Organization instproc decorate_page_order {} {
+        set prefix ""
+        set count 1
+        foreach item [my children_of_type Item] {
+            $item decorate_page_order $prefix $count
+            incr count
+        }
+    }
+
+    ::ims::cp::Organization instmixin add ::xowiki::ims::cp::Organization
+
+    Class Item
+
+    Item instproc decorate_page_order {prefix count} {
+        my set page_order $prefix$count
+        set subcount 1
+        foreach item [my children_of_type Item] {
+            $item decorate_page_order [my set page_order]. $subcount
+            incr subcount
+        }
+    }
+
+    ::ims::cp::Item instmixin add ::xowiki::ims::cp::Item
+
     # By default, we import only those items, that are mentioned in the Manifest, which 
     # is correct. Using the switch, we import everything that was in the zippackage.
     ContentPackage instproc import_to_wiki_instance { {-include_dead_files false} } {
         my instvar xo_pkg_obj
-        # TODO dirty
-        if {$include_dead_files eq false} {
-            ns_log notice "LIVE oNLY"
-            foreach imsfile [my get_unique_file_objects] {
-                #set cp [$imsfile find_content_package]
-                set realfile [$imsfile set fileobj]
-                $realfile set package_id [$xo_pkg_obj set id]
-                $realfile set folder_id  [$xo_pkg_obj set folder_id]
-                $realfile mixin add ::xowiki::ims::cp::File
-                $realfile to_xowiki
-            }
-        } else {
-            ns_log notice "DEAD TOO"
-            foreach realfile [[self]::files children] {
-                my log "FILE $realfile ready to import"
-                $realfile set package_id [$xo_pkg_obj set id]
-                $realfile set folder_id  [$xo_pkg_obj set folder_id]
-                $realfile mixin add ::xowiki::ims::cp::File
-                $realfile to_xowiki
+
+        set m [self]::manifest
+        set o [$m get_default_or_implicit_organization]
+        $o decorate_page_order
+
+        foreach item [$o all_children_of_type Item] {
+            # Get the Resource attached to the Item
+            set r [$m get_element_by_identifier [$item set identifierref]]
+            foreach f [${r}::files children] {
+                # We only attach the page order to the file that has the same href as the resource
+                if {[$r set href] eq [$f set href]} {
+                    $f set page_order [$item set page_order]
+                }
+                #TODO: Theoretically the href could have spaces (problem with array)"
+                my set imsfiles([$f set href]) $f
+                my log "** preparing file [$f set href] in cp [my set location] for import"
             }
         }
+
+        foreach imsfilehref [my array names imsfiles] {
+#            set realfile [[my set imsfiles($imsfilehref)] set fileobj]
+            set realfile [::xoutil::File create [self]::[my autoname F_] -location [file join [my set location] $imsfilehref]]
+            $realfile set package_id [$xo_pkg_obj set id]
+            $realfile set folder_id  [$xo_pkg_obj set folder_id]
+            if {[[my set imsfiles($imsfilehref)] exists page_order]} {
+                $realfile set page_order [[my set imsfiles($imsfilehref)] set page_order]
+            } else {
+                $realfile set page_order ""
+            }
+            $realfile mixin add ::xowiki::ims::cp::File
+            $realfile to_xowiki
+        }
+
+
+
+       #   # TODO dirty
+       #   if {$include_dead_files eq true} {
+       #       ns_log notice "LIVE oNLY"
+       #       foreach imsfile [my get_unique_file_objects] {
+       #           set realfile [$imsfile set fileobj]
+       #           $realfile set package_id [$xo_pkg_obj set id]
+       #           $realfile set folder_id  [$xo_pkg_obj set folder_id]
+       #           $realfile mixin add ::xowiki::ims::cp::File
+       #           #$realfile to_xowiki
+       #       }
+       #   } else {
+       #       ns_log notice "DEAD TOO"
+       #       # FIXME this is only the first level
+       #       foreach realfile [[self]::files children] {
+       #           my log "FILE $realfile ready to import"
+       #           $realfile set package_id [$xo_pkg_obj set id]
+       #           $realfile set folder_id  [$xo_pkg_obj set folder_id]
+       #           $realfile mixin add ::xowiki::ims::cp::File
+       #           $realfile to_xowiki
+       #       }
+       #   }
     }
-
-#    # We extend the XoWiki Objects with the ability to
-#    # "write" them as temp_files to disk. Maybe this can be done 
-#    # more beautiful
-#
-#    # this is deprecated
-#    Class Page
-#    ::xowiki::Page instmixin add ::xowiki::ims::cp::Page
-#
-#    Page instproc get_cp_filename {} {
-#        set filename [my name]
-#        #TODO consider MIME and remove language ?
-#        regsub -all : $filename _ filename
-#        return $filename.html
-#    }
-#
-#    Page instproc write_to_file { {-path "/tmp"} } {
-#        set fn "$path/[my get_cp_filename]"
-#        set fid [open $fn w]
-#        puts $fid [my text]
-#        puts $fid [my serialize]
-#        close $fid
-#        return $fn
-#    }
-
-#    Class Resource
-#
-#    # TODO Do we need dependencies here??
-#    Resource instproc import_to_xowiki {} {
-#        ds_comment "RESSOURCE: [my serialize]"
-#        foreach imsfile [[self]::files children] {
-#
-#            #we check, whether we already created a file with this url
-#
-#
-#            set cp [$imsfile find_content_package]
-#            #ds_comment "CP IS: $cp"
-#            set xo_pkg_obj ::[$cp set xo_pkg_obj]
-#            #ds_comment "XOCPOBJ IS: $xo_pkg_obj"
-#            #ds_comment "XOPKGOBJ: [$xo_pkg_obj serialize]"
-#
-#
-#            #ds_comment "FILE TAG [$imsfile serialize]"
-#            set realfile [$imsfile set fileobj]
-#            $realfile set package_id [$xo_pkg_obj set id]
-#            $realfile set folder_id  [$xo_pkg_obj set folder_id]
-#            $realfile mixin add ::xowiki::ims::cp::File
-#            #ds_comment "REAL [$realfile serialize]"
-#            $realfile to_xowiki
-#        }
-#    }
-
-
 
 
     ###########################
@@ -528,6 +556,7 @@ namespace eval ::xowiki::ims::cp {
                     set o [::xowiki::Page new -destroy_on_cleanup \
                         -set text [list [my set content] [my set mime_type]] \
                         -set title [my set name] \
+                        -set page_order [my set page_order] \
                         -name [my set name] \
                         -parent_id $folder_id \
                         -package_id $package_id]

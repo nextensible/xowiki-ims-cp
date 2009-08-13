@@ -63,7 +63,7 @@
             with_general_comments t
             show_per_object_categories t
             autoname f
-            template_file view-book
+            template_file /packages/xowiki-ims-cp/www/view-scorm-package
             top_includelet {}
          } \
         -set description {} \
