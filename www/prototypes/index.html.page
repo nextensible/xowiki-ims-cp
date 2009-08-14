@@ -4,8 +4,7 @@
 <p>
 You have just created a fresh Wiki based SCORM Package.<br>
 You can start authoring this SCORM package like any other XoWiki-instance, or alternatively
-import another scorm package:
-{{adp admin/upload}}
+<a href="admin/upload" target="_top">import an existing scorm package</a>
 Please follow the guidelines below to create valid SCORM packages, that play in 
 other SCORM players:
 </p>

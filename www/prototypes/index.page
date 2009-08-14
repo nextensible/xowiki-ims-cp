@@ -56,7 +56,7 @@
         set formpage [::xowiki::FormPage new -destroy_on_cleanup \
         -set instance_attributes {
             index_page en:index.html
-            with_user_tracking t
+            with_user_tracking f
             PackagePath {}
             use_hstore t
             with_footer t

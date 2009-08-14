@@ -417,6 +417,9 @@ namespace eval ::xowiki::ims::cp {
         set sql [::xowiki::Page instance_select_query -with_subtypes 1 -folder_id [[my set xo_pkg_obj] set folder_id] -with_children true]
         db_foreach retrieve_instances $sql {
             # preserve the folder object - we get errors if not
+             if {$object_type eq "::xowiki::FormPage" || $object_type eq "::xowiki::Form"} {
+                 continue
+             }
              if {$name eq "::[[my set xo_pkg_obj] set folder_id]"} {
                  continue
              }
@@ -454,8 +457,24 @@ namespace eval ::xowiki::ims::cp {
 
     # By default, we import only those items, that are mentioned in the Manifest, which 
     # is correct. Using the switch, we import everything that was in the zippackage.
-    ContentPackage instproc import_to_wiki_instance { {-include_dead_files false} } {
+    ContentPackage instproc import_to_wiki_instance { {-include_dead_files true} } {
         my instvar xo_pkg_obj
+
+
+        # First get ALL files
+        # (many CPs include additional files)
+
+        #  if {$include_dead_files eq true} {
+        #      foreach realfile [[self]::files children] {
+        #          $realfile set package_id [$xo_pkg_obj set id]
+        #          $realfile set folder_id  [$xo_pkg_obj set folder_id]
+        #          $realfile set page_order ""
+        #          $realfile set title [$realfile set name]
+        #          $realfile mixin add ::xowiki::ims::cp::File
+        #          $realfile to_xowiki
+        #      }
+        #  }
+
 
         set m [self]::manifest
         set o [$m get_default_or_implicit_organization]
@@ -467,6 +486,7 @@ namespace eval ::xowiki::ims::cp {
             foreach f [${r}::files children] {
                 # We only attach the page order to the file that has the same href as the resource
                 if {[$r set href] eq [$f set href]} {
+                    $f set title "[$item title]"
                     $f set page_order [$item set page_order]
                 }
                 #TODO: Theoretically the href could have spaces (problem with array)"
@@ -482,8 +502,11 @@ namespace eval ::xowiki::ims::cp {
             $realfile set folder_id  [$xo_pkg_obj set folder_id]
             if {[[my set imsfiles($imsfilehref)] exists page_order]} {
                 $realfile set page_order [[my set imsfiles($imsfilehref)] set page_order]
+                $realfile set title [[my set imsfiles($imsfilehref)] set title]
             } else {
                 $realfile set page_order ""
+                $realfile set title [$realfile set name]
+
             }
             $realfile mixin add ::xowiki::ims::cp::File
             $realfile to_xowiki
@@ -555,7 +578,7 @@ namespace eval ::xowiki::ims::cp {
                     #ds_comment "HTML: [my serialize]"
                     set o [::xowiki::Page new -destroy_on_cleanup \
                         -set text [list [my set content] [my set mime_type]] \
-                        -set title [my set name] \
+                        -set title [my set title] \
                         -set page_order [my set page_order] \
                         -name [my set name] \
                         -parent_id $folder_id \

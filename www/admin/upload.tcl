@@ -37,6 +37,6 @@ ad_form \
         $pkg empty_target_wiki
     } -after_submit {
         $pkg import_to_wiki_instance
-        ad_returnredirect "list"
+        ad_returnredirect "[$package_id package_url]"
     }
 set context .
