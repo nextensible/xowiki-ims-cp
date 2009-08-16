@@ -9,7 +9,6 @@
 
 # TODO: Enforce the suffix .html when pages are created!!! We need that
 # TODO: Automatically create xoscorm-index.html page (based on prototype)
-# TODO: The  "with_footer" switch of ::xowikiPage-render appends unwanted output
 # TODO: Make the frame (stage) resizeable
 # TODO: Show Organizations switch only when more then one org 
 # TODO: Handle language prefixes. for now, they are just removed. (also file:)
@@ -20,7 +19,7 @@
 # the error comes from "record_last_visited" (but it works anyway)
 
 ::xo::library require -absolute t [acs_root_dir]/packages/xowiki/tcl/xowiki-procs
-::xo::library require -absolute t [acs_root_dir]/packages/scorm/tcl/scorm-content-packaging-procs
+::xo::library require -absolute t [acs_root_dir]/packages/scorm/tcl/scorm-cam-procs
 
 namespace eval ::xowiki::ims {}
 namespace eval ::xowiki::ims::cp {
