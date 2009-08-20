@@ -19,7 +19,7 @@
 # the error comes from "record_last_visited" (but it works anyway)
 
 ::xo::library require -absolute t [acs_root_dir]/packages/xowiki/tcl/xowiki-procs
-::xo::library require -absolute t [acs_root_dir]/packages/scorm/tcl/scorm-cam-procs
+::xo::library require -absolute t [acs_root_dir]/packages/xolrn/tcl/xolrn-procs
 
 namespace eval ::xowiki::ims {}
 namespace eval ::xowiki::ims::cp {
@@ -29,6 +29,10 @@ namespace eval ::xowiki::ims::cp {
         -pretty_name "IMS CP Service for XoWiki" \
         -table_name "xowiki_ims_cp" \
         -superclass ::xowiki::Package
+
+
+    Package instmixin add ::xolrn::ResolverMixin
+
 
     Package instproc generate_manifest {} {
         # Create a new Manifest from scratch
@@ -210,7 +214,7 @@ namespace eval ::xowiki::ims::cp {
     Package ad_instproc has_manifest {} {
       Checks whether this XoWiki instance contains an ::xowiki::File named imsmanifest.xml
       } {
-        return [expr { [my get_page_from_name -name "file:imsmanifest.xml"] eq "" ? false : true }
+        return [expr { [my get_page_from_name -name "file:imsmanifest.xml"] eq "" ? false : true }]
     }
 
     Package ad_instproc get_manifest {} {
@@ -223,6 +227,10 @@ namespace eval ::xowiki::ims::cp {
     Package ad_instproc decorate_page_order {} {
         Decorate the pages inside this instance with page_order values according to the manifest file
       } {
+          if {![my has_manifest]} {
+        my msg "no manifest"
+        return ""
+          }
         set m [my get_manifest]
         set o [$m get_default_or_implicit_organization]
         $o decorate_page_order
