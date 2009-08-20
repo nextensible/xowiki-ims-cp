@@ -32,11 +32,17 @@ ad_form \
         ::ims::cp::PackageInterchangeFile create pif -location [template::util::file::get_property tmp_filename $upload_file]
 
         set pkg [pif unpack]
-        $pkg mixin add ::xowiki::ims::cp::ContentPackage
-        $pkg set xo_pkg_obj $package_id
-        $pkg empty_target_wiki
+      #  $pkg mixin add ::xowiki::ims::cp::ContentPackage
+      #  $pkg set xo_pkg_obj $package_id
+      #  $pkg empty_target_wiki
     } -after_submit {
-        $pkg import_to_wiki_instance
+      #  $pkg import_to_wiki_instance
+        set folder_id [$package_id folder_id]
+        ::xo::db::CrFolder fetch_object  -item_id $folder_id -object ::cr_folder$folder_id
+        ::xoutil::CrImporter new -source $pkg -target ::cr_folder$folder_id
+
+        $package_id decorate_page_order
+
         ad_returnredirect "[$package_id package_url]"
     }
 set context .

@@ -207,6 +207,57 @@ namespace eval ::xowiki::ims::cp {
         $pif deliver
     }
 
+    Package ad_instproc has_manifest {} {
+      Checks whether this XoWiki instance contains an ::xowiki::File named imsmanifest.xml
+      } {
+        return [expr { [my get_page_from_name -name "file:imsmanifest.xml"] eq "" ? false : true }
+    }
+
+    Package ad_instproc get_manifest {} {
+        Returns a fully-built manifest object based upon the xml inside the imsmanifest.xml file that lies in the current instance
+      } {
+        set page [my get_page_from_name -name "file:imsmanifest.xml"]
+        return [::scorm::Manifest create [self]::manifest -location [$page full_file_name]]
+    }
+
+    Package ad_instproc decorate_page_order {} {
+        Decorate the pages inside this instance with page_order values according to the manifest file
+      } {
+        set m [my get_manifest]
+        set o [$m get_default_or_implicit_organization]
+        $o decorate_page_order
+
+        foreach item [$o all_children_of_type Item] {
+            # Get the Resource attached to the Item
+            set r [$m get_element_by_identifier [$item set identifierref]]
+            foreach f [${r}::files children] {
+                # We only attach the page order to the file that has the same href as the resource
+                if {[$r set href] eq [$f set href]} {
+                    $f set title "[$item title]"
+                    $f set page_order [$item set page_order]
+                }
+                #TODO: Theoretically the href could have spaces (problem with array)"
+                my set imsfiles([$f set href]) $f
+                #my log "** preparing file [$f set href] in cp [my set location] for import"
+            }
+        }
+
+        foreach imsfilehref [my array names imsfiles] {
+
+            #my msg "wanna decorate $imsfilehref"
+            #my msg "-> [my resolve_page $imsfilehref dummy]"
+
+            set page [my resolve_page $imsfilehref view]
+
+            if {[[my set imsfiles($imsfilehref)] exists page_order]} {
+                $page set page_order [[my set imsfiles($imsfilehref)] set page_order]
+                $page set title [[my set imsfiles($imsfilehref)] set title]
+            }
+            $page save
+        }
+    }
+
+
 
     #
     # This is a copy of XoWikis "resolve page" method. We just added the emphasized part
@@ -454,9 +505,14 @@ namespace eval ::xowiki::ims::cp {
 
     ::ims::cp::Item instmixin add ::xowiki::ims::cp::Item
 
+
+
+
+
     # By default, we import only those items, that are mentioned in the Manifest, which 
     # is correct. Using the switch, we import everything that was in the zippackage.
     ContentPackage instproc import_to_wiki_instance { {-include_dead_files true} } {
+        # DEPRECATED - new IMPORTER
         my instvar xo_pkg_obj
 
 
