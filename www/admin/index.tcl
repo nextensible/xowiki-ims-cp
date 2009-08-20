@@ -1,4 +1,4 @@
-::xowiki::Package initialize -ad_doc {
+::xowiki::ims::cp::Package initialize -ad_doc {
 
   This is the admin page for the package.  It displays all of the types 
   of wiki pages provides links to delete them

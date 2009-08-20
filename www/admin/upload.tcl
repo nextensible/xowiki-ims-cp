@@ -1,4 +1,4 @@
-::xowiki::Package initialize -ad_doc {
+::xowiki::ims::cp::Package initialize -ad_doc {
 } -parameter {
   {replace 0}
 }

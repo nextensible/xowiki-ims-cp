@@ -30,6 +30,13 @@ namespace eval ::xowiki::ims::cp {
         -table_name "xowiki_ims_cp" \
         -superclass ::xowiki::Package
 
+    Package ad_instproc initialize {} {
+        mixin ::xowf::WorkflowPage to every FormPage
+      } {
+        # This method is called, whenever an xowf package is initialized.
+        next
+        ::scorm::Organization instmixin add ::xowiki::ims::cp::Organization
+    }
 
     Package instmixin add ::xolrn::ResolverMixin
 
@@ -227,37 +234,41 @@ namespace eval ::xowiki::ims::cp {
     Package ad_instproc decorate_page_order {} {
         Decorate the pages inside this instance with page_order values according to the manifest file
       } {
-          if {![my has_manifest]} {
-        my msg "no manifest"
-        return ""
-          }
+        if {![my has_manifest]} {
+            my msg "no manifest"
+            return ""
+        }
         set m [my get_manifest]
         set o [$m get_default_or_implicit_organization]
         $o decorate_page_order
 
         foreach item [$o all_children_of_type Item] {
-            # Get the Resource attached to the Item
-            set r [$m get_element_by_identifier [$item set identifierref]]
-            foreach f [${r}::files children] {
-                # We only attach the page order to the file that has the same href as the resource
-                if {[$r set href] eq [$f set href]} {
-                    $f set title "[$item title]"
-                    $f set page_order [$item set page_order]
+            # Get the Resource attached to the Item, if any
+            if {[$item exists identifierref]} {
+                set r [$m get_element_by_identifier [$item set identifierref]]
+                foreach f [${r}::files children] {
+                    my msg "candidate [$f set href] "
+                    # We only attach the page order to the file that has the same href as the resource
+                    if {[$r set href] eq [$f set href]} {
+                        my msg "decorate: [$f set href] "
+                        $f set title "[$item title]"
+                        $f set page_order [$item set page_order]
+                    }
+                    #TODO: Theoretically the href could have spaces (problem with array)"
+                    my set imsfiles([$f set href]) $f
+                    #my log "** preparing file [$f set href] in cp [my set location] for import"
                 }
-                #TODO: Theoretically the href could have spaces (problem with array)"
-                my set imsfiles([$f set href]) $f
-                #my log "** preparing file [$f set href] in cp [my set location] for import"
             }
         }
 
         foreach imsfilehref [my array names imsfiles] {
 
-            #my msg "wanna decorate $imsfilehref"
-            #my msg "-> [my resolve_page $imsfilehref dummy]"
 
+            my msg "wanna decorate $imsfilehref"
             set page [my resolve_page $imsfilehref view]
 
             if {[[my set imsfiles($imsfilehref)] exists page_order]} {
+                my msg "-> [my resolve_page $imsfilehref dummy]"
                 $page set page_order [[my set imsfiles($imsfilehref)] set page_order]
                 $page set title [[my set imsfiles($imsfilehref)] set title]
             }
@@ -270,6 +281,9 @@ namespace eval ::xowiki::ims::cp {
     #
     # This is a copy of XoWikis "resolve page" method. We just added the emphasized part
     #
+
+# TODO: is this still necessary?
+
   Package instproc resolve_page {{-use_search_path true} {-simple false} -lang object method_var} {
     my log "resolve_page '$object'"
     upvar $method_var method
@@ -320,7 +334,7 @@ namespace eval ::xowiki::ims::cp {
     ###############################################################
     ###############################################################
     # Check if we have a file with same name
-    # TODO what means simple
+    # TODO - check if is this obsolete NOW??
     set filepage [my resolve_request -default_lang "download/file" -simple $simple -path $object method]
     if {$page eq "" && $filepage ne ""} {
         return $filepage
