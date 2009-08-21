@@ -11,16 +11,7 @@ ad_form \
     -html { enctype multipart/form-data } \
     -form {
       {upload_file:file(file) {html {size 30}} {label "Import file for upload"} }
-      {empty_first:integer(radio),optional {options {{yes 1} {no 0}}} {value 1} 
-        {label "Empty this instance first"}
-        {help_text "This will delete all pages in this instance before importing the package"}
-      }
-      {replace:integer(radio),optional {options {{yes 1} {no 0}}} {value 0} 
-        {label "Replace objects"}
-        {help_text "If checked, import will delete the object if it exists and create it new, otherwise import just adds a revision"}
-      }
-      {ok_btn:text(submit) {label "[_ acs-templating.HTMLArea_SelectUploadBtn]"}
-      }
+      {ok_btn:text(submit) {label "[_ acs-templating.HTMLArea_SelectUploadBtn]"} }
     } \
     -on_submit {
       if {$upload_file eq ""} {
@@ -41,7 +32,9 @@ ad_form \
         ::xo::db::CrFolder fetch_object  -item_id $folder_id -object ::cr_folder$folder_id
         ::xoutil::CrImporter new -source $pkg -target ::cr_folder$folder_id
 
+        $package_id decorate_titles
         $package_id decorate_page_order
+        $package_id generate_category_organization
 
         ad_returnredirect "[$package_id package_url]"
     }

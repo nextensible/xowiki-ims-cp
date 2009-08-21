@@ -3,20 +3,24 @@
 <h2>Congratulations!</h2>
 <p>
 You have just created a fresh Wiki based SCORM Package.<br>
-You can start authoring this SCORM package like any other XoWiki-instance, or alternatively
-<a href="admin/upload" target="_top">import an existing scorm package</a>
-Please follow the guidelines below to create valid SCORM packages, that play in 
-other SCORM players:
+You can
+<ul>
+<li>start authoring this SCORM package like any other XoWiki-instance, or alternatively
+<li><a href="admin/upload" target="_top">import an existing scorm package</a>
+</ul>
+</p>
+<p>
+Please follow the guidelines below to create valid SCORM packages,
+that play in other SCORM players:
 </p>
 <h3>Guidelines</h3>
 <ul>
-<li>Add a Section information to every page, that you want to be displayed in the SCORM Organization
 <li>Append a "file-extension" to every page you create .html or .htm (mypage.html)
 </ul>
 
 
-
-For more details, consult the [[http://media.wu-wien.ac.at/download/xowiki-doc/|XoWiki documentation]]. 
+For more details about SCORM, consult the [[http://www.scorm.com/|scorm.com website (unofficial but nice)]].
+For more details about XoWiki, consult the [[http://media.wu-wien.ac.at/download/xowiki-doc/|XoWiki documentation]].
 
 }
 

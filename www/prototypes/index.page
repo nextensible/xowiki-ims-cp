@@ -20,6 +20,7 @@
             @template_file@ 
             @show_per_object_categories@
             @index_page@
+            @security_policy@
             @with_footer@} text/html}
 
         set form_constraints {use_hstore:boolean
@@ -31,6 +32,7 @@
             index_page:text
             autoname:boolean
             PackagePath:text
+            security_policy:text
             top_includelet:text
             {_publish_status:radio,options={live ready} {draft production},label=#xowiki.publish_status#,default=production}
             _page_order:hidden
@@ -55,15 +57,16 @@
 
         set formpage [::xowiki::FormPage new -destroy_on_cleanup \
         -set instance_attributes {
-            index_page en:index.html
+            index_page en:player
             with_user_tracking f
             PackagePath {}
             use_hstore t
             with_footer t
+            security_policy "::xowiki::policy1"
             with_general_comments t
             show_per_object_categories t
             autoname f
-            template_file /packages/xowiki-ims-cp/www/view-scorm-package
+            template_file /packages/xowiki-ims-cp/www/view-raw
             top_includelet {}
          } \
         -set description {} \

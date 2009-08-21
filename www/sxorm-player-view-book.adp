@@ -108,7 +108,7 @@ function get_popular_tags(popular_tags_link, prefix) {
 </if>
 
 <div id='book-page'>
-<iframe src="@iframesrc;noquote@" width="100%" height=400px></iframe>
+<iframe name="sxorm-player" src="@iframesrc;noquote@" width="100%" height=400px></iframe>
 <div style="text-align:right">
 <a href="admin/list">Edit this SCORM package</a>
 </div>

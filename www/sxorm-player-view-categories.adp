@@ -14,6 +14,9 @@
         @organization_selector;noquote@
     </div>
     </div>
-    <div id="ft"></div>
+    <div id="ft">
+        <a href="?org=plain">Plain View</a>
+        <a href="?org=categories">Categories View</a>
+        <a href="?org=book">Book View</a>
+    </div>
 </div>
-

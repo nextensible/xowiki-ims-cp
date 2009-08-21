@@ -1,19 +1,24 @@
-::xowiki::Object new -title "IMS CP Player" -text {
+::xowiki::Object new -title "SXORM Player" -text {
 
     my initialize -parameter {
-        {-resource_href ""}
+        {-resource_href "index.html"}
+        {-org ""}
     }
-    ::xo::cc set_parameter object_type ::xowiki::PlainPage
 
-    ::xo::cc set_parameter template_file "/packages/xowiki-ims-cp/www/ims-cp-player-view"
+    my get_parameters
 
+    switch -- $org {
+        categories  { set template "/packages/xowiki-ims-cp/www/sxorm-player-view-categories" }
+        book        { set template "/packages/xowiki-ims-cp/www/sxorm-player-view-book" }
+        plain       { set template "/packages/xowiki-ims-cp/www/sxorm-player-view-plain" }
+        default     { set template "/packages/xowiki-ims-cp/www/sxorm-player-view-plain" }
+    }
 
-    Class CGI
-    CGI instproc content {} {
+    ::xo::cc set_parameter template_file "$template"
+
+    proc content {} {
         my get_parameters
-        return "<IFRAME name='ims-cp-player' src='$resource_href' width=100% height=600 scrolling=auto> Your user agent does not support frames or is currently configured not to display frames. However, you may visit the related document. </IFRAME>"
-}
-my mixin add CGI
-
+        return "<IFRAME name='sxorm-player' src='$resource_href' width=100% height=600 scrolling=auto> Your user agent does not support frames or is currently configured not to display frames. However, you may visit the related document. </IFRAME>"
+    }
 
 }

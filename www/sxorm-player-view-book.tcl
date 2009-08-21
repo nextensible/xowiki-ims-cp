@@ -1,5 +1,5 @@
 set title [[$package_id folder_id] title]
-set toc   [$page include [list toc -style list -open_page $name -expand_all 1 -decoration plain]]
+set toc   [$page include [list BookOrganization -style scorm_navigation -open_page $name -expand_all 1 -decoration plain]]
 set i     [$page set __last_includelet]
 
 ::template::head::add_javascript -order A -src "/resources/scorm/1.2/prototype.js"

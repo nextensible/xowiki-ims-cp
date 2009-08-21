@@ -21,6 +21,7 @@ lang::message::lookup "" xowiki.admin " "
 TableWidget t1 -volatile \
     -actions [subst {
       Action new -label "Export as SCORM Package" -url export-cp
+      Action new -label "Refresh SCORM Organizations" -url refresh
       Action new -label "all pages" -url list
       Action new -label "[lang::message::lookup {} categories.Categories Categories]" \
           -url $category_url
