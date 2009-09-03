@@ -1,6 +1,6 @@
 ::template::head::add_css -href "/resources/yui/2.7.0b/build/grids/grids-min.css"
-::template::head::add_javascript -order A  -src  "/resources/scorm-rte/prototype.js"
-::template::head::add_javascript -order B  -src  "/resources/scorm-rte/scorm_api.js"
+::template::head::add_javascript -order A  -src  "/resources/scorm/1.2/prototype.js"
+::template::head::add_javascript -order B  -src  "/resources/scorm/1.2/scorm_api.js"
 
 ::xowiki::ims::cp::Package initialize -url [ad_conn url]
 
