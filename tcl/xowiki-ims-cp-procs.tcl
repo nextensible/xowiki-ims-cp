@@ -15,10 +15,9 @@
 # TODO: Do we want to add .html to all pages?
 # TODO: I somehow broke the mime_types: Remove */* (really - still??)
 
-::xo::library require -absolute t [acs_root_dir]/packages/xowiki/tcl/xowiki-procs
-::xo::library require -absolute t [acs_root_dir]/packages/xolrn/tcl/xoutil-procs
-::xo::library require -absolute t [acs_root_dir]/packages/xowiki-ims-cp/tcl/xowiki-ims-cp-procs
-::xo::library require -absolute t [acs_root_dir]/packages/scorm/tcl/scorm-cam-procs
+::xo::library require -package xowiki xowiki-procs
+::xo::library require -package xolrn xoutil-procs
+::xo::library require -package scorm scorm-cam-procs
 
 namespace eval ::xowiki::ims {}
 namespace eval ::xowiki::ims::cp {
