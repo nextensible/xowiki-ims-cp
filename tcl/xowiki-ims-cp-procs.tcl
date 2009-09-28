@@ -901,4 +901,4 @@ namespace eval ::xowiki::ims::cp {
             }
     }
 }
-
+::xo::library source_dependent
