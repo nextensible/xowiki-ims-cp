@@ -35,8 +35,6 @@ namespace eval ::xowiki::ims::cp {
         ::scorm::Organization instmixin add ::xowiki::ims::cp::Organization
     }
 
-    Package instmixin add ::xolrn::ResolverMixin
-
 
     # TODO Clean this up - there are more beautiful functions now
     Package ad_instproc generate_manifest {} {
